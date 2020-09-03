@@ -1,0 +1,118 @@
+---
+title: "Flex Dashboard Example"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+library(plotly)
+library(rjson)
+
+url <- 'https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json'
+counties <- rjson::fromJSON(file=url)
+url2<- "https://raw.githubusercontent.com/plotly/datasets/master/fips-unemp-16.csv"
+df <- read.csv(url2, colClasses=c(fips="character"))
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+fig <- plot_ly()
+fig <- fig %>% add_trace(
+    type="choropleth",
+    geojson=counties,
+    locations=df$fips,
+    z=df$unemp,
+    colorscale="Viridis",
+    zmin=0,
+    zmax=12,
+    marker=list(line=list(
+      width=0)
+    )
+  )
+fig <- fig %>% colorbar(title = "Unemployment Rate (%)")
+fig <- fig %>% layout(
+    title = "2016 US Unemployment by County"
+)
+
+fig <- fig %>% layout(
+    geo = g
+  )
+
+fig
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+library(plotly)
+library(MASS)
+
+covmat <- matrix(c(0.8, 0.4, 0.3, 0.8), nrow = 2, byrow = T)
+df <- mvrnorm(n = 10000, c(0,0), Sigma = covmat)
+df <- as.data.frame(df)
+
+colnames(df) <- c("x", "y")
+fig <- plot_ly(df, x = ~x, y = ~y, alpha = 0.3)
+fig <- fig %>% add_markers(marker = list(line = list(color = "black", width = 1)))
+fig <- fig %>% layout(
+    title = "Drop down menus - Plot type",
+    xaxis = list(domain = c(0.1, 1)),
+    yaxis = list(title = "y"),
+    updatemenus = list(
+      list(
+        y = 0.8,
+        buttons = list(
+
+          list(method = "restyle",
+               args = list("type", "scatter"),
+               label = "Scatter"),
+
+          list(method = "restyle",
+               args = list("type", "histogram2d"),
+               label = "2D Histogram")))
+    ))
+
+fig
+```
+
+### Chart C
+
+```{r}
+# volcano is a numeric matrix that ships with R
+fig <- plot_ly(z = ~volcano) %>% add_surface(
+  contours = list(
+    z = list(
+      show=TRUE,
+      usecolormap=TRUE,
+      highlightcolor="#ff0000",
+      project=list(z=TRUE)
+      )
+    )
+  )
+fig <- fig %>% layout(
+    scene = list(
+      camera=list(
+        eye = list(x=1.87, y=0.88, z=-0.64)
+        )
+      )
+  )
+
+fig
+```
+
